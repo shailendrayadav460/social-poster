@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poster Studio — Card Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: rgba(255,255,255,0.07);
+    --accent: #c084fc;
+    --accent2: #f472b6;
+    --text: #f1f0ff;
+    --muted: #7e7a9a;
+    --radius: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(90deg, rgba(192,132,252,0.06) 0%, transparent 60%);
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 18px;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  header span {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ── */
+  main {
+    width: 100%;
+    max-width: 1280px;
+    padding: 40px 24px 60px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: sticky;
+    top: 24px;
+  }
+
+  .panel-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: linear-gradient(90deg, rgba(192,132,252,0.07) 0%, transparent);
+  }
+
+  .panel-body { padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── FORM CONTROLS ── */
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .field { display: flex; flex-direction: column; }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color .2s;
+    resize: none;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: rgba(192,132,252,0.5); }
+
+  textarea { height: 72px; }
+
+  [contenteditable][data-empty="true"] { color: var(--muted); }
+  [contenteditable]:empty:before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  /* Color row */
+  .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .color-swatch-wrap {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  .color-swatch-wrap input[type="color"] {
+    width: 28px; height: 28px;
+    border: none; border-radius: 50%;
+    padding: 0; cursor: pointer;
+    background: none;
+    -webkit-appearance: none;
+  }
+  .color-swatch-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  .color-swatch-wrap input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+  .color-swatch-wrap span { font-size: 12px; color: var(--muted); }
+
+  /* Upload */
+  .upload-zone {
+    border: 2px dashed rgba(192,132,252,0.3);
+    border-radius: 10px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(192,132,252,0.04); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-zone .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone p { font-size: 13px; color: var(--muted); }
+  .upload-zone strong { color: var(--accent); }
+
+  /* Sliders */
+  .slider-wrap { display: flex; align-items: center; gap: 12px; }
+  input[type="range"] {
+    flex: 1; -webkit-appearance: none;
+    height: 4px; border-radius: 99px;
+    background: var(--surface2);
+    outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    cursor: pointer;
+  }
+  .slider-val {
+    font-size: 12px; color: var(--muted);
+    min-width: 38px; text-align: right;
+  }
+
+  /* Font size */
+  select {
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237e7a9a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  /* Gradient preset chips */
+  .grad-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grad-chip {
+    width: 36px; height: 36px; border-radius: 8px;
+    cursor: pointer; border: 2px solid transparent;
+    transition: transform .15s, border-color .15s;
+    flex-shrink: 0;
+  }
+  .grad-chip:hover { transform: scale(1.1); }
+  .grad-chip.active { border-color: white; }
+
+  /* CTA */
+  .cta-row { display: flex; gap: 10px; padding: 0 22px 22px; }
+
+  .btn {
+    flex: 1; padding: 13px;
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; letter-spacing: .5px;
+    transition: opacity .2s, transform .15s;
+  }
+  .btn:hover { opacity: .88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    color: #fff;
+  }
+  .btn-outline {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  /* ── PREVIEW AREA ── */
+  .preview-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .preview-label {
+    font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    align-self: flex-start;
+  }
+
+  /* The actual card that gets exported */
+  #card-wrapper {
+    width: 100%;
+    max-width: 540px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #card {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 3%;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 30px 80px rgba(0,0,0,0.6),
+      0 0 120px rgba(192,132,252,0.15);
+    transition: box-shadow .3s;
+  }
+  #card:hover {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.1),
+      0 40px 100px rgba(0,0,0,0.7),
+      0 0 160px rgba(192,132,252,0.2);
+  }
+
+  #card-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    transition: background .3s;
+  }
+
+  #card-img {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: opacity .3s;
+  }
+
+  #card-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+
+  #card-text-wrap {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 32px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 900;
+    line-height: 1.15;
+    color: #fff;
+    word-break: break-word;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  #card-subtitle {
+    font-size: clamp(13px, 2vw, 17px);
+    font-weight: 300;
+    color: rgba(255,255,255,0.75);
+    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+    word-break: break-word;
+  }
+
+  /* Image object fit control */
+  .fit-row { display: flex; gap: 8px; }
+  .fit-btn {
+    flex: 1; padding: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .fit-btn.active, .fit-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(192,132,252,0.08);
+  }
+
+  /* Format chips */
+  .format-chips { display: flex; gap: 8px; }
+  .format-chip {
+    padding: 6px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .format-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(192,132,252,0.1);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0;
+  }
+
+  /* sparkle */
+  .sparkle { display: inline-block; animation: spin 4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media(max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">✦</div>
+  <h1>Poster Studio</h1>
+  <span>Social Card Maker</span>
+</header>
+
+<main>
+
+  <!-- ── CONTROLS PANEL ── -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <div class="panel">
+      <div class="panel-header">✦ &nbsp;Upload Image</div>
+      <div class="panel-body">
+        <div class="upload-zone" id="dropzone">
+          <input type="file" id="img-input" accept="image/*">
+          <div class="upload-icon">🖼️</div>
+          <p><strong>Click or drag</strong> to upload</p>
+          <p>PNG, JPG, WEBP, GIF</p>
+        </div>
+        <div class="field">
+          <label>Image Fit</label>
+          <div class="fit-row">
+            <button class="fit-btn active" data-fit="cover">Cover</button>
+            <button class="fit-btn" data-fit="contain">Contain</button>
+            <button class="fit-btn" data-fit="fill">Stretch</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Image Opacity</label>
+          <div class="slider-wrap">
+            <input type="range" id="img-opacity" min="0" max="100" value="100">
+            <span class="slider-val" id="opacity-val">100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">✦ &nbsp;Background</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Gradient Presets</label>
+          <div class="grad-chips" id="grad-chips">
+            <div class="grad-chip active" style="background:linear-gradient(135deg,#c084fc,#f472b6)" data-g="linear-gradient(135deg,#c084fc,#f472b6)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#6366f1,#06b6d4)" data-g="linear-gradient(135deg,#6366f1,#06b6d4)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#f97316,#facc15)" data-g="linear-gradient(135deg,#f97316,#facc15)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#10b981,#3b82f6)" data-g="linear-gradient(135deg,#10b981,#3b82f6)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#f43f5e,#f97316)" data-g="linear-gradient(135deg,#f43f5e,#f97316)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#0f172a,#1e3a8a)" data-g="linear-gradient(135deg,#0f172a,#1e3a8a)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#831843,#be185d,#f43f5e)" data-g="linear-gradient(135deg,#831843,#be185d,#f43f5e)"></div>
+            <div class="grad-chip" style="background:linear-gradient(135deg,#064e3b,#34d399)" data-g="linear-gradient(135deg,#064e3b,#34d399)"></div>
+          </div>
+        </div>
+        <div class="color-row">
+          <div class="field">
+            <label>Color 1</label>
+            <div class="color-swatch-wrap">
+              <input type="color" id="bg-color1" value="#c084fc">
+              <span>From</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Color 2</label>
+            <div class="color-swatch-wrap">
+              <input type="color" id="bg-color2" value="#f472b6">
+              <span>To</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Gradient Direction</label>
+          <select id="grad-dir">
+            <option value="135deg">↘ Diagonal</option>
+            <option value="90deg">→ Horizontal</option>
+            <option value="180deg">↓ Vertical</option>
+            <option value="45deg">↗ Anti-diagonal</option>
+            <option value="0deg">↑ Bottom to Top</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Overlay Darkness</label>
+          <div class="slider-wrap">
+            <input type="range" id="overlay-opacity" min="0" max="80" value="35">
+            <span class="slider-val" id="overlay-val">35%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">✦ &nbsp;Text</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>Main Title</label>
+          <input type="text" id="title-input" placeholder="Your headline here…" value="Your Amazing Poster">
+        </div>
+        <div class="field">
+          <label>Subtitle / Caption <span style="color:var(--accent);font-size:10px;text-transform:none;letter-spacing:0">— ChatGPT / kahi se bhi copy-paste karo ✦</span></label>
+          <div id="sub-input"
+            contenteditable="true"
+            data-placeholder="Yahan paste karo ya likho…"
+            style="min-height:80px;max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:DM Sans,sans-serif;font-size:14px;padding:10px 14px;outline:none;transition:border-color .2s;line-height:1.6;"
+            onfocus="this.style.borderColor='rgba(192,132,252,0.5)'"
+            onblur="this.style.borderColor='var(--border)'"
+          >Crafted with ✦ Poster Studio</div>
+        </div>
+        <div class="color-row">
+          <div class="field">
+            <label>Title Color</label>
+            <div class="color-swatch-wrap">
+              <input type="color" id="title-color" value="#ffffff">
+              <span>Title</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Subtitle Color</label>
+            <div class="color-swatch-wrap">
+              <input type="color" id="sub-color" value="#e0d7ff">
+              <span>Sub</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Title Size</label>
+          <div class="slider-wrap">
+            <input type="range" id="title-size" min="18" max="80" value="36">
+            <span class="slider-val" id="title-size-val">36px</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Text Position</label>
+          <select id="text-pos">
+            <option value="bottom">Bottom</option>
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PREVIEW ── -->
+  <div class="preview-area">
+    <span class="preview-label">Live Preview</span>
+
+    <div id="card-wrapper">
+      <div id="card">
+        <div id="card-bg"></div>
+        <div id="card-img"></div>
+        <div id="card-overlay"></div>
+        <div id="card-text-wrap">
+          <div id="card-title">Your Amazing Poster</div>
+          <div id="card-subtitle">Crafted with ✦ Poster Studio</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:540px;">
+      <div class="field">
+        <label>Export Format</label>
+        <div class="format-chips">
+          <div class="format-chip active" data-fmt="png">PNG</div>
+          <div class="format-chip" data-fmt="jpeg">JPEG</div>
+          <div class="format-chip" data-fmt="webp">WEBP</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="resetAll()">↺ Reset</button>
+        <button class="btn btn-primary" onclick="downloadCard()">⬇ Download Card</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+// ── State ──
+// ── Subtitle render helper ──
+function renderSubtitle() {
+  const raw = state.subtitleHTML || '';
+  cardSub.innerHTML = raw;
+  cardSub.style.color = state.subColor;
+
+  // Apply card styling to pasted elements
+  cardSub.querySelectorAll('b,strong').forEach(el => { el.style.fontWeight = '700'; });
+  cardSub.querySelectorAll('i,em').forEach(el => { el.style.fontStyle = 'italic'; });
+  cardSub.querySelectorAll('h1,h2,h3,h4').forEach(el => {
+    el.style.fontFamily = "'Playfair Display', serif";
+    el.style.fontWeight = '700';
+    el.style.marginBottom = '4px';
+    el.style.marginTop = '6px';
+  });
+  cardSub.querySelectorAll('ul').forEach(el => {
+    el.style.paddingLeft = '18px';
+    el.style.margin = '4px 0';
+  });
+  cardSub.querySelectorAll('ol').forEach(el => {
+    el.style.paddingLeft = '18px';
+    el.style.margin = '4px 0';
+  });
+  cardSub.querySelectorAll('li').forEach(el => {
+    el.style.marginBottom = '3px';
+    el.style.lineHeight = '1.5';
+  });
+  cardSub.querySelectorAll('p,div').forEach(el => {
+    if (el.style) el.style.margin = '0 0 4px 0';
+  });
+  cardSub.querySelectorAll('a').forEach(el => {
+    el.style.color = 'inherit';
+    el.style.textDecoration = 'underline';
+  });
+}
+
+let state = {
+  imgSrc: null,
+  imgFit: 'cover',
+  imgOpacity: 1,
+  bgGradient: 'linear-gradient(135deg,#c084fc,#f472b6)',
+  color1: '#c084fc',
+  color2: '#f472b6',
+  gradDir: '135deg',
+  overlayOpacity: 0.35,
+  title: 'Your Amazing Poster',
+  subtitleHTML: 'Crafted with ✦ Poster Studio',
+  subtitle: 'Crafted with ✦ Poster Studio',
+  titleColor: '#ffffff',
+  subColor: '#e0d7ff',
+  titleSize: 36,
+  textPos: 'bottom',
+  bulletStyle: '●',
+  fmt: 'png'
+};
+
+// ── Refs ──
+const card        = document.getElementById('card');
+const cardBg      = document.getElementById('card-bg');
+const cardImg     = document.getElementById('card-img');
+const cardOverlay = document.getElementById('card-overlay');
+const cardTextWrap= document.getElementById('card-text-wrap');
+const cardTitle   = document.getElementById('card-title');
+const cardSub     = document.getElementById('card-subtitle');
+
+// ── Render ──
+function render() {
+  // background
+  cardBg.style.background = state.bgGradient;
+
+  // image
+  if (state.imgSrc) {
+    cardImg.style.backgroundImage = `url(${state.imgSrc})`;
+    cardImg.style.backgroundSize = state.imgFit === 'fill' ? '100% 100%' : state.imgFit;
+    cardImg.style.opacity = state.imgOpacity;
+  } else {
+    cardImg.style.backgroundImage = 'none';
+  }
+
+  // overlay
+  cardOverlay.style.background = `linear-gradient(to top, rgba(0,0,0,${state.overlayOpacity * 1.5}) 0%, rgba(0,0,0,${state.overlayOpacity * 0.3}) 50%, transparent 100%)`;
+
+  // text
+  cardTitle.textContent = state.title || '';
+  cardTitle.style.color = state.titleColor;
+  cardTitle.style.fontSize = state.titleSize + 'px';
+
+  // subtitle
+  renderSubtitle();
+
+  // position
+  cardTextWrap.style.top    = '';
+  cardTextWrap.style.bottom = '';
+  cardTextWrap.style.transform = '';
+  cardTextWrap.style.display = 'flex';
+  cardTextWrap.style.flexDirection = 'column';
+
+  if (state.textPos === 'bottom') {
+    cardTextWrap.style.bottom = '0';
+    cardTextWrap.style.justifyContent = 'flex-end';
+  } else if (state.textPos === 'top') {
+    cardTextWrap.style.top = '0';
+    cardTextWrap.style.justifyContent = 'flex-start';
+  } else {
+    cardTextWrap.style.top = '50%';
+    cardTextWrap.style.transform = 'translateY(-50%)';
+    cardTextWrap.style.justifyContent = 'center';
+    cardTextWrap.style.textAlign = 'center';
+  }
+}
+
+// ── Image Upload ──
+document.getElementById('img-input').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.imgSrc = ev.target.result;
+    document.getElementById('dropzone').querySelector('p').innerHTML = `<strong>${f.name}</strong>`;
+    render();
+  };
+  reader.readAsDataURL(f);
+});
+
+// ── Image opacity ──
+document.getElementById('img-opacity').addEventListener('input', e => {
+  state.imgOpacity = e.target.value / 100;
+  document.getElementById('opacity-val').textContent = e.target.value + '%';
+  render();
+});
+
+// ── Image fit ──
+document.querySelectorAll('.fit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fit-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.imgFit = btn.dataset.fit;
+    render();
+  });
+});
+
+// ── Gradient presets ──
+document.getElementById('grad-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.grad-chip');
+  if (!chip) return;
+  document.querySelectorAll('.grad-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  state.bgGradient = chip.dataset.g;
+  // sync custom pickers
+  const match = state.bgGradient.match(/#[a-fA-F0-9]{6}/g);
+  if (match) {
+    document.getElementById('bg-color1').value = match[0];
+    document.getElementById('bg-color2').value = match[match.length - 1];
+    state.color1 = match[0];
+    state.color2 = match[match.length - 1];
+  }
+  render();
+});
+
+// ── Custom gradient ──
+function updateGradient() {
+  state.bgGradient = `linear-gradient(${state.gradDir},${state.color1},${state.color2})`;
+  render();
+}
+
+document.getElementById('bg-color1').addEventListener('input', e => { state.color1 = e.target.value; updateGradient(); });
+document.getElementById('bg-color2').addEventListener('input', e => { state.color2 = e.target.value; updateGradient(); });
+document.getElementById('grad-dir').addEventListener('change', e => { state.gradDir = e.target.value; updateGradient(); });
+
+// ── Overlay ──
+document.getElementById('overlay-opacity').addEventListener('input', e => {
+  state.overlayOpacity = e.target.value / 100;
+  document.getElementById('overlay-val').textContent = e.target.value + '%';
+  render();
+});
+
+// ── Text ──
+document.getElementById('title-input').addEventListener('input', e => { state.title = e.target.value; render(); });
+// ── Subtitle rich input ──
+const subInput = document.getElementById('sub-input');
+
+// placeholder behaviour
+subInput.addEventListener('focus', function() {
+  if (this.getAttribute('data-empty') === 'true') {
+    this.innerHTML = '';
+    this.removeAttribute('data-empty');
+  }
+});
+subInput.addEventListener('blur', function() {
+  if (!this.textContent.trim()) {
+    this.innerHTML = '<span style="color:var(--muted)">Yahan paste karo ya likho…</span>';
+    this.setAttribute('data-empty','true');
+  }
+});
+
+subInput.addEventListener('input', () => {
+  state.subtitleHTML = subInput.innerHTML;
+  renderSubtitle();
+});
+
+subInput.addEventListener('paste', e => {
+  e.preventDefault();
+  // Try to get HTML from clipboard first
+  const html = e.clipboardData.getData('text/html');
+  const plain = e.clipboardData.getData('text/plain');
+
+  if (html && html.trim()) {
+    // Clean and insert HTML
+    const clean = cleanPastedHTML(html);
+    document.execCommand('insertHTML', false, clean);
+  } else {
+    // plain text - convert newlines to <br>
+    const escaped = plain.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const lined = escaped.replace(/\n/g,'<br>');
+    document.execCommand('insertHTML', false, lined);
+  }
+  state.subtitleHTML = subInput.innerHTML;
+  renderSubtitle();
+});
+
+function cleanPastedHTML(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+
+  // Remove script/style/meta tags
+  tmp.querySelectorAll('script,style,meta,link,head').forEach(el => el.remove());
+
+  // Keep only useful tags, strip everything else to span
+  const ALLOWED = new Set(['B','STRONG','I','EM','U','S','BR','P','DIV','SPAN','H1','H2','H3','H4','UL','OL','LI','A']);
+
+  function cleanNode(node) {
+    if (node.nodeType === 3) return; // text node - keep
+    if (!ALLOWED.has(node.tagName)) {
+      // replace with its children
+      const frag = document.createDocumentFragment();
+      [...node.childNodes].forEach(c => { cleanNode(c); frag.appendChild(c); });
+      node.replaceWith(frag);
+      return;
+    }
+    // Strip all attributes except keep basic on a
+    const keep = node.tagName === 'A' ? ['href'] : [];
+    [...node.attributes].forEach(attr => {
+      if (!keep.includes(attr.name)) node.removeAttribute(attr.name);
+    });
+    [...node.childNodes].forEach(cleanNode);
+  }
+
+  [...tmp.childNodes].forEach(cleanNode);
+  return tmp.innerHTML;
+}
+document.getElementById('title-color').addEventListener('input', e => { state.titleColor = e.target.value; render(); });
+document.getElementById('sub-color').addEventListener('input', e => { state.subColor = e.target.value; render(); renderSubtitle(); });
+
+
+document.getElementById('title-size').addEventListener('input', e => {
+  state.titleSize = +e.target.value;
+  document.getElementById('title-size-val').textContent = e.target.value + 'px';
+  render();
+});
+document.getElementById('text-pos').addEventListener('change', e => { state.textPos = e.target.value; render(); });
+
+// ── Format ──
+document.querySelectorAll('.format-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.format-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.fmt = chip.dataset.fmt;
+  });
+});
+
+// ── Download ──
+async function downloadCard() {
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+    });
+
+    const mimeMap = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' };
+    const mime = mimeMap[state.fmt] || 'image/png';
+    const quality = state.fmt === 'jpeg' ? 0.95 : undefined;
+    const dataURL = canvas.toDataURL(mime, quality);
+
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `poster-card.${state.fmt}`;
+    a.click();
+  } catch(err) {
+    alert('Export failed. Try a different image or browser.');
+    console.error(err);
+  }
+
+  btn.textContent = '⬇ Download Card';
+  btn.disabled = false;
+}
+
+// ── Reset ──
+function resetAll() {
+  document.getElementById('img-input').value = '';
+  state.imgSrc = null;
+  document.getElementById('dropzone').querySelector('p').innerHTML = '<strong>Click or drag</strong> to upload';
+  state.imgOpacity = 1;
+  document.getElementById('img-opacity').value = 100;
+  document.getElementById('opacity-val').textContent = '100%';
+  state.bgGradient = 'linear-gradient(135deg,#c084fc,#f472b6)';
+  document.querySelectorAll('.grad-chip').forEach((c,i) => c.classList.toggle('active', i===0));
+  state.overlayOpacity = 0.35;
+  document.getElementById('overlay-opacity').value = 35;
+  document.getElementById('overlay-val').textContent = '35%';
+  state.title = 'Your Amazing Poster';
+  state.subtitleHTML = 'Crafted with ✦ Poster Studio';
+  document.getElementById('title-input').value = state.title;
+  document.getElementById('sub-input').innerHTML = state.subtitleHTML;
+  state.titleColor = '#ffffff';
+  state.subColor = '#e0d7ff';
+  document.getElementById('title-color').value = '#ffffff';
+  document.getElementById('sub-color').value = '#e0d7ff';
+  state.titleSize = 36;
+  document.getElementById('title-size').value = 36;
+  document.getElementById('title-size-val').textContent = '36px';
+  state.textPos = 'bottom';
+  document.getElementById('text-pos').value = 'bottom';
+
+  render();
+}
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>
